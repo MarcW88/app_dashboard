@@ -1,3 +1,5 @@
+import officialApps from "./apps.json";
+
 export type ToolStatus = "Prototype" | "MVP" | "Stable" | "À améliorer" | "Client-ready" | "Internal only";
 
 export type ToolApp = {
@@ -10,4 +12,4 @@ export type ToolApp = {
   repo?: string;
 };
 
-export const apps: ToolApp[] = [];
+export const apps = officialApps as ToolApp[];

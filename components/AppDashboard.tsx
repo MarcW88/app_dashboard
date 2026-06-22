@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Bot, ChartNoAxesCombined, Cloud, Code2, Database, Github, Globe2, HardDrive, Network, Plus, Save, ServerCog, Settings, Trash2 } from "lucide-react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpRight, Bot, ChartNoAxesCombined, Cloud, Code2, Database, Download, Github, Globe2, HardDrive, Network, Plus, Save, ServerCog, Settings, Trash2, Upload } from "lucide-react";
 import type { ToolApp, ToolStatus } from "@/data/apps";
 import { apps as defaultApps } from "@/data/apps";
 
@@ -34,6 +34,7 @@ export default function AppDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
@@ -75,6 +76,38 @@ export default function AppDashboard() {
 
   function resetTools() {
     setTools(defaultApps);
+    setSelectedCategory(null);
+  }
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(tools, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "apps.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJson(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result)) as ToolApp[];
+        if (!Array.isArray(parsed)) return;
+
+        setTools(parsed);
+        setSelectedCategory(null);
+      } catch {
+        return;
+      } finally {
+        event.target.value = "";
+      }
+    };
+    reader.readAsText(file);
   }
 
   return (
@@ -262,11 +295,25 @@ export default function AppDashboard() {
             </form>
 
             <section className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.50)] p-6 shadow-[0_24px_70px_var(--shadow)] backdrop-blur-md">
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <h2 className="text-3xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">Apps</h2>
-                <button onClick={resetTools} className="rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.62)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.86)]">
-                  Reset defaults
-                </button>
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-3xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">Apps</h2>
+                  <p className="mt-1 text-xs font-bold text-[var(--tweed-deep)]">Export this list, then copy it into data/apps.json to publish it for everyone.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={exportJson} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.70)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.92)]">
+                    <Download className="size-3.5" />
+                    Export JSON
+                  </button>
+                  <button onClick={() => importInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.70)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.92)]">
+                    <Upload className="size-3.5" />
+                    Import JSON
+                  </button>
+                  <button onClick={resetTools} className="rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.62)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.86)]">
+                    Reset official
+                  </button>
+                  <input ref={importInputRef} type="file" accept="application/json" onChange={importJson} className="hidden" />
+                </div>
               </div>
 
               <div className="grid max-h-[560px] gap-3 overflow-auto pr-1">
