@@ -1,84 +1,88 @@
-import { ArrowUpRight, Bot, ChartNoAxesCombined, CircleDot, Code2, Github, Globe2, Network, ServerCog } from "lucide-react";
+import Image from "next/image";
+import { ArrowUpRight, Bot, ChartNoAxesCombined, Cloud, Code2, Database, Github, Globe2, HardDrive, Network, ServerCog } from "lucide-react";
 import { apps } from "@/data/apps";
 
+const icons = [ServerCog, Network, Globe2, Bot, ChartNoAxesCombined, Code2, Database, Cloud, HardDrive];
+const categoryStyles = ["lg:col-span-4", "lg:col-span-5", "lg:col-span-3"];
+const cardStyles = ["lg:col-span-6", "lg:col-span-4", "lg:col-span-5", "lg:col-span-3", "lg:col-span-7", "lg:col-span-4"];
 const categories = [...new Set(apps.map((app) => app.category))];
-const icons = [ServerCog, Network, Globe2, Bot, ChartNoAxesCombined, Code2];
-
-const statusStyles: Record<string, string> = {
-  Prototype: "text-[var(--copper)]",
-  MVP: "text-[var(--petrol)]",
-  Stable: "text-[var(--petrol-deep)]",
-  "À améliorer": "text-[var(--tweed)]",
-  "Client-ready": "text-[var(--petrol)]",
-  "Internal only": "text-[var(--tweed-deep)]"
-};
 
 export default function Home() {
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-8 lg:px-10">
-      <section className="mx-auto max-w-6xl rounded-xl border border-[var(--line)] bg-[rgba(255,248,234,0.38)] p-5 shadow-[0_28px_80px_var(--shadow)] backdrop-blur-md sm:p-7">
-        <header className="mb-5 flex items-center justify-between gap-4 px-1">
-          <div>
-            <h1 className="text-2xl font-bold tracking-[-0.04em] text-[var(--petrol)] sm:text-3xl">App Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.42)] px-3 py-1.5 text-xs font-semibold text-[var(--tweed-deep)]">
-            <CircleDot className="size-3 text-[var(--copper)]" />
-            {apps.length} apps
+    <main className="min-h-screen bg-[#41535a] px-3 py-8 text-[#eaf4f2] sm:px-8 lg:px-14">
+      <section className="mx-auto min-h-[78vh] w-full max-w-[1500px] overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(rgba(13,33,42,0.42),rgba(13,33,42,0.42)),radial-gradient(circle_at_72%_18%,rgba(194,78,104,0.56),transparent_26%),radial-gradient(circle_at_42%_52%,rgba(47,112,128,0.58),transparent_32%),radial-gradient(circle_at_58%_88%,rgba(217,86,83,0.55),transparent_26%),linear-gradient(135deg,#0b2631,#193947_42%,#3d2634)] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.45)] backdrop-blur-md sm:p-7 lg:p-9">
+        <header className="mb-6 flex items-start justify-between px-1">
+          <Image src="/noctua-logo.png" alt="Noctua" width={84} height={40} className="h-9 w-auto object-contain brightness-0 invert opacity-90" priority />
+          <div className="text-right text-[10px] leading-4 text-white/80">
+            <div className="font-semibold">{new Date().toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })}</div>
+            <div className="text-white/55">Clear</div>
           </div>
         </header>
 
-        <div className="grid auto-rows-[minmax(76px,auto)] grid-cols-1 gap-2.5 md:grid-cols-6">
+        <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {["SEO/GEO", "Apps", "Tools", "Repos"].map((label, index) => (
+            <div key={label} className="rounded-md border border-white/5 bg-[#213b49]/70 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+              <div className="flex justify-between text-[10px] text-white/62">
+                <span>{label}</span>
+                <span>{index === 1 ? apps.length : categories.length + index}</span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-black/20">
+                <div className="h-full rounded-full bg-white/25" style={{ width: `${42 + index * 14}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-12">
           {categories.map((category, categoryIndex) => {
             const categoryApps = apps.filter((app) => app.category === category);
-            const Icon = icons[categoryIndex % icons.length];
+            const CategoryIcon = icons[categoryIndex % icons.length];
 
             return (
-              <section key={category} className={`rounded-lg border border-[var(--line)] bg-[rgba(255,248,234,0.46)] p-3 shadow-[0_18px_46px_var(--shadow)] backdrop-blur-sm ${categoryIndex === 0 ? "md:col-span-3 md:row-span-3" : "md:col-span-3"}`}>
-                <div className="mb-2 flex items-center justify-between gap-3 border-b border-[var(--line)] pb-2">
+              <section key={category} className={`${categoryStyles[categoryIndex % categoryStyles.length]} rounded-md border border-white/5 bg-[#1b3544]/62 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}>
+                <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-[0.08em] text-white/58">
                   <div className="flex items-center gap-2">
-                    <Icon className="size-4 text-[var(--copper)]" />
-                    <h2 className="text-sm font-bold tracking-[-0.02em] text-[var(--petrol)]">{category}</h2>
+                    <CategoryIcon className="size-3.5 text-[#d4a15f]" />
+                    <span>{category}</span>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--tweed)]">{categoryApps.length} tools</span>
+                  <span>{categoryApps.length} running</span>
                 </div>
 
-                <div className="grid gap-2">
+                <div className="grid grid-cols-1 gap-2 lg:grid-cols-12">
                   {categoryApps.map((app, appIndex) => {
-                    const AppIcon = icons[(categoryIndex + appIndex + 1) % icons.length];
-                    const isLarge = categoryIndex === 0 && appIndex === 0;
+                    const AppIcon = icons[(categoryIndex + appIndex + 2) % icons.length];
+                    const wide = appIndex % 3 === 0;
 
                     return (
-                      <article key={app.name} className={`group rounded-md border border-[var(--line)] bg-[rgba(238,228,211,0.34)] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition hover:-translate-y-0.5 hover:bg-[rgba(255,248,234,0.58)] ${isLarge ? "p-4" : "p-3"}`}>
+                      <article key={app.name} className={`${cardStyles[(categoryIndex + appIndex) % cardStyles.length]} group rounded-md border border-white/5 bg-[#203a49]/72 px-3 py-2 text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm transition hover:bg-[#294757]/78`}>
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-start gap-3">
-                            <div className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-md bg-[rgba(82,106,104,0.12)] text-[var(--petrol)]">
-                              <AppIcon className="size-4" />
-                            </div>
+                            <AppIcon className="mt-0.5 size-5 shrink-0 text-[#d4a15f]" />
                             <div className="min-w-0">
-                              <h3 className="truncate text-sm font-bold tracking-[-0.02em] text-[var(--ink)]">{app.name}</h3>
-                              <p className={`${isLarge ? "mt-2 line-clamp-3" : "mt-1 line-clamp-1"} text-xs leading-5 text-[var(--tweed-deep)]`}>{app.description}</p>
+                              <h2 className="truncate text-[13px] font-semibold leading-4 text-white">{app.name}</h2>
+                              <p className={`${wide ? "line-clamp-2" : "line-clamp-1"} mt-0.5 text-[10px] leading-4 text-white/54`}>{app.description}</p>
                             </div>
                           </div>
-                          <span className={`shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] ${statusStyles[app.status]}`}>{app.status}</span>
+                          <span className="rounded-sm bg-[#143b34]/80 px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#73d69d]">{app.status}</span>
                         </div>
 
-                        <div className="mt-3 grid grid-cols-3 gap-1.5">
+                        <div className="mt-2 grid grid-cols-3 gap-1">
                           {app.stack.slice(0, 3).map((tech) => (
-                            <div key={tech} className="truncate rounded border border-[var(--line)] bg-[rgba(255,248,234,0.36)] px-2 py-1 text-center text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--tweed-deep)]">
+                            <div key={tech} className="truncate rounded-sm bg-[#182f3c]/72 px-2 py-1 text-center text-[9px] font-semibold uppercase text-white/76">
                               {tech}
                             </div>
                           ))}
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2">
-                          <a href={app.url} className="inline-flex items-center gap-1 rounded-full border border-[rgba(82,106,104,0.35)] bg-[var(--petrol)] px-3 py-1.5 text-[11px] font-bold text-[var(--cream)] shadow-[0_10px_24px_rgba(82,106,104,0.14)] transition hover:bg-[var(--petrol-deep)]">
+                        <div className="mt-2 flex items-center gap-2">
+                          <a href={app.url} className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/80 hover:text-white">
                             Open
                             <ArrowUpRight className="size-3" />
                           </a>
                           {app.repo ? (
-                            <a href={app.repo} className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.34)] px-3 py-1.5 text-[11px] font-bold text-[var(--tweed-deep)] transition hover:bg-[rgba(255,248,234,0.62)]">
+                            <a href={app.repo} className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/55 hover:text-white">
                               <Github className="size-3" />
-                              Repo
+                              GitHub
                             </a>
                           ) : null}
                         </div>
