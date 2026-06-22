@@ -1,1 +1,65 @@
-[]
+[
+  {
+    "name": "Content Generator",
+    "description": "Génération de contenus, briefs et structures SEO.",
+    "category": "SEO Content",
+    "stack": [],
+    "status": "Prototype",
+    "url": "https://contentgenerator-3csrqtu5wz7ebxl4trnr6u.streamlit.app/",
+    "repo": ""
+  },
+  {
+    "name": "Internal Link Analysis",
+    "description": "Audit et recommandations de maillage interne.",
+    "category": "SEO Technique",
+    "stack": [],
+    "status": "Prototype",
+    "url": "https://applinkanalysis-ba2pudjkbczbtwezatrtdn.streamlit.app/",
+    "repo": ""
+  },
+  {
+    "name": "Keyword Research",
+    "description": "Recherche, classification et priorisation de mots-clés.",
+    "category": "Analyse SEO/GEO",
+    "stack": [],
+    "status": "Stable",
+    "url": "https://keywordresearchapp-nbmt2i6yhkd8u3kefz7anw.streamlit.app/",
+    "repo": ""
+  },
+  {
+    "name": "ACP/UCP Reader",
+    "description": "Outil d’analyse de préparation ACP/UCP pour les produits e-commerce.",
+    "category": "E-Commerce",
+    "stack": [],
+    "status": "Prototype",
+    "url": "https://acpreadiness-qyvone3wu4vdlohbxpxabs.streamlit.app/",
+    "repo": ""
+  },
+  {
+    "name": "Backlinks Analysis",
+    "description": "Analyse des backlinks, domaines référents, ancres ...",
+    "category": "Autorité",
+    "stack": [],
+    "status": "À améliorer",
+    "url": "https://huggingface.co/spaces/SemacticSEO/Backlinks_Analysis",
+    "repo": ""
+  },
+  {
+    "name": "GEO Question Lab",
+    "description": "Génération, classification et préparation de questions pour les analyses GEO.",
+    "category": "Analyse SEO/GEO",
+    "stack": [],
+    "status": "À améliorer",
+    "url": "https://huggingface.co/spaces/SemacticSEO/GEO_Question_Lab",
+    "repo": ""
+  },
+  {
+    "name": "Robots.txt Monitor",
+    "description": "Outil de monitoring SEO technique permettant de surveiller les changements dans les fichiers robots.txt.",
+    "category": "SEO Technique",
+    "stack": [],
+    "status": "Stable",
+    "url": "https://robots-txt-monitoring-hljatiqve-marc-williame-s-projects.vercel.app/",
+    "repo": ""
+  }
+]
