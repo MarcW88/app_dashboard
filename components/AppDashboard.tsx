@@ -31,6 +31,7 @@ const emptyForm: ToolApp = {
 export default function AppDashboard() {
   const [tools, setTools] = useState<ToolApp[]>(defaultApps);
   const [activeTab, setActiveTab] = useState<"dashboard" | "settings">("dashboard");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
 
@@ -46,6 +47,7 @@ export default function AppDashboard() {
   }, [tools]);
 
   const categories = useMemo(() => [...new Set(tools.map((app) => app.category || "Uncategorized"))], [tools]);
+  const visibleCategories = selectedCategory ? categories.filter((category) => category === selectedCategory) : categories;
 
   function addTool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,9 +87,8 @@ export default function AppDashboard() {
                 <Image src="/noctua-logo.png" alt="Noctua" width={54} height={54} className="h-12 w-auto object-contain" priority />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--copper)]">Noctua internal suite</p>
-                <h1 className="mt-1 text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)] sm:text-5xl">Command Center</h1>
-                <p className="mt-1 text-sm font-semibold text-[var(--tweed)]">{tools.length} apps · {categories.length} categories · manually curated</p>
+                <h1 className="text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)] sm:text-5xl">App Dashboard</h1>
+                <p className="mt-1 text-sm font-semibold text-[var(--tweed)]">{tools.length} apps · {categories.length} categories</p>
               </div>
             </div>
 
@@ -122,20 +123,25 @@ export default function AppDashboard() {
                   <h2 className="mt-1 text-2xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">Workspace</h2>
                 </div>
                 <div className="space-y-2">
+                  <button onClick={() => setSelectedCategory(null)} className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] transition ${selectedCategory === null ? "border-[rgba(82,106,104,0.42)] bg-[var(--petrol)] text-[var(--cream)]" : "border-[var(--line)] bg-[rgba(255,248,234,0.56)] text-[var(--petrol-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
+                    <span className="text-sm font-black">All apps</span>
+                    <span className={`rounded-full px-2 py-1 text-[10px] font-black ${selectedCategory === null ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(194,145,93,0.14)] text-[var(--tweed-deep)]"}`}>{tools.length}</span>
+                  </button>
                   {categories.map((category, categoryIndex) => {
                     const CategoryIcon = icons[categoryIndex % icons.length];
                     const categoryApps = tools.filter((app) => app.category === category);
+                    const isSelected = selectedCategory === category;
 
                     return (
-                      <div key={category} className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.56)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)]">
+                      <button key={category} onClick={() => setSelectedCategory(category)} className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] transition ${isSelected ? "border-[rgba(82,106,104,0.42)] bg-[var(--petrol)] text-[var(--cream)]" : "border-[var(--line)] bg-[rgba(255,248,234,0.56)] text-[var(--petrol-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[rgba(82,106,104,0.12)] text-[var(--petrol)]">
+                          <div className={`grid size-9 shrink-0 place-items-center rounded-xl ${isSelected ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(82,106,104,0.12)] text-[var(--petrol)]"}`}>
                             <CategoryIcon className="size-4" />
                           </div>
-                          <span className="truncate text-sm font-black text-[var(--petrol-deep)]">{category}</span>
+                          <span className="truncate text-sm font-black">{category}</span>
                         </div>
-                        <span className="rounded-full bg-[rgba(194,145,93,0.14)] px-2 py-1 text-[10px] font-black text-[var(--tweed-deep)]">{categoryApps.length}</span>
-                      </div>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-black ${isSelected ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(194,145,93,0.14)] text-[var(--tweed-deep)]"}`}>{categoryApps.length}</span>
+                      </button>
                     );
                   })}
                 </div>
@@ -157,7 +163,8 @@ export default function AppDashboard() {
                   </button>
                 </section>
 
-                {categories.map((category, categoryIndex) => {
+                {visibleCategories.map((category) => {
+                  const categoryIndex = categories.indexOf(category);
                   const categoryApps = tools.filter((app) => app.category === category);
                   const CategoryIcon = icons[categoryIndex % icons.length];
 
@@ -180,7 +187,7 @@ export default function AppDashboard() {
                           const AppIcon = icons[(categoryIndex + appIndex + 1) % icons.length];
 
                           return (
-                            <article key={`${app.name}-${app.url}`} className="group flex min-h-[220px] flex-col justify-between rounded-[24px] border border-[var(--line)] bg-[linear-gradient(145deg,rgba(255,248,234,0.82),rgba(238,228,211,0.50))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.58),0_18px_48px_rgba(67,55,43,0.10)] transition hover:-translate-y-1 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.66),0_24px_64px_rgba(67,55,43,0.14)]">
+                            <article key={`${app.name}-${app.url}`} className="group flex min-h-[232px] flex-col justify-between rounded-[26px] border border-[rgba(82,106,104,0.28)] bg-[linear-gradient(160deg,rgba(255,255,250,0.94),rgba(220,232,229,0.46)_54%,rgba(194,145,93,0.10))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_22px_58px_rgba(82,106,104,0.14)] ring-1 ring-white/45 transition hover:-translate-y-1 hover:border-[rgba(82,106,104,0.42)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_28px_72px_rgba(82,106,104,0.18)]">
                               <div>
                                 <div className="mb-5 flex items-start justify-between gap-4">
                                   <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[rgba(82,106,104,0.12)] text-[var(--petrol)] transition group-hover:bg-[var(--petrol)] group-hover:text-[var(--cream)]">
