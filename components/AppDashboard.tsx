@@ -6,7 +6,6 @@ import { ArrowUpRight, Bot, ChartNoAxesCombined, Cloud, Code2, Database, Downloa
 import type { ToolApp, ToolStatus } from "@/data/apps";
 import { apps as defaultApps } from "@/data/apps";
 
-const storageKey = "app-dashboard-tools";
 const statuses: ToolStatus[] = ["Prototype", "MVP", "Stable", "À améliorer", "Client-ready", "Internal only"];
 const icons = [ServerCog, Network, Globe2, Bot, ChartNoAxesCombined, Code2, Database, Cloud, HardDrive];
 const statusStyles: Record<ToolStatus, string> = {
@@ -30,21 +29,37 @@ const emptyForm: ToolApp = {
 
 export default function AppDashboard() {
   const [tools, setTools] = useState<ToolApp[]>(defaultApps);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"dashboard" | "settings">("dashboard");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
   const importInputRef = useRef<HTMLInputElement>(null);
+  const loadedRef = useRef<string>("");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(storageKey);
-    if (saved) {
-      setTools(JSON.parse(saved));
-    }
+    fetch("/api/apps")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          loadedRef.current = JSON.stringify(data);
+          setTools(data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify(tools));
+    if (JSON.stringify(tools) === loadedRef.current) return;
+    const timer = setTimeout(() => {
+      fetch("/api/apps", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tools),
+      }).catch(() => {});
+    }, 600);
+    return () => clearTimeout(timer);
   }, [tools]);
 
   const categories = useMemo(() => [...new Set(tools.map((app) => app.category || "Uncategorized"))], [tools]);
@@ -121,7 +136,9 @@ export default function AppDashboard() {
               </div>
               <div>
                 <h1 className="text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)] sm:text-5xl">App Dashboard</h1>
-                <p className="mt-1 text-sm font-semibold text-[var(--tweed)]">{tools.length} apps · {categories.length} categories</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--tweed)]">
+                  {loading ? "Chargement…" : `${tools.length} apps · ${categories.length} categories`}
+                </p>
               </div>
             </div>
 
