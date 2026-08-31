@@ -1,31 +1,43 @@
 "use client";
 
-import Image from "next/image";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Bot, ChartNoAxesCombined, Cloud, Code2, Database, Download, Github, Globe2, HardDrive, Network, Plus, Save, ServerCog, Settings, Trash2, Upload } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronUp, Download, Github, Plus, Trash2, Upload } from "lucide-react";
 import type { ToolApp, ToolStatus } from "@/data/apps";
 import { apps as defaultApps } from "@/data/apps";
 
 const statuses: ToolStatus[] = ["Prototype", "MVP", "Stable", "À améliorer", "Client-ready", "Internal only"];
-const icons = [ServerCog, Network, Globe2, Bot, ChartNoAxesCombined, Code2, Database, Cloud, HardDrive];
-const statusStyles: Record<ToolStatus, string> = {
-  Prototype: "border-[rgba(194,145,93,0.35)] bg-[rgba(194,145,93,0.12)] text-[var(--tweed-deep)]",
-  MVP: "border-[rgba(82,106,104,0.32)] bg-[rgba(82,106,104,0.12)] text-[var(--petrol)]",
-  Stable: "border-[rgba(82,106,104,0.28)] bg-[rgba(220,232,229,0.58)] text-[var(--petrol-deep)]",
-  "À améliorer": "border-[rgba(194,145,93,0.42)] bg-[rgba(194,145,93,0.16)] text-[var(--tweed-deep)]",
-  "Client-ready": "border-[rgba(82,106,104,0.32)] bg-[rgba(220,232,229,0.72)] text-[var(--petrol-deep)]",
-  "Internal only": "border-[rgba(103,88,72,0.24)] bg-[rgba(238,228,211,0.62)] text-[var(--tweed-deep)]"
+
+const statusConfig: Record<ToolStatus, { label: string; cls: string }> = {
+  "Prototype":     { label: "EN CONSTRUCTION", cls: "bg-amber-50 text-amber-800 border-amber-300" },
+  "MVP":           { label: "PRÉ-OUVERTURE",   cls: "bg-yellow-50 text-yellow-800 border-yellow-300" },
+  "Stable":        { label: "DISPONIBLE",       cls: "bg-emerald-50 text-emerald-800 border-emerald-300" },
+  "À améliorer":   { label: "EN RÉNOVATION",    cls: "bg-rose-50 text-rose-800 border-rose-300" },
+  "Client-ready":  { label: "SUITE PRESTIGE",   cls: "bg-violet-50 text-violet-800 border-violet-300" },
+  "Internal only": { label: "USAGE INTERNE",    cls: "bg-stone-100 text-stone-600 border-stone-300" },
 };
 
 const emptyForm: ToolApp = {
-  name: "",
-  description: "",
-  category: "SEO Technique",
-  stack: [],
-  status: "Prototype",
-  url: "",
-  repo: ""
+  name: "", description: "", category: "SEO Technique",
+  stack: [], status: "Prototype", url: "", repo: "", notes: "",
 };
+
+const BORDEAUX = "#7D2B3E";
+const GOLD     = "#C5A132";
+const CREAM    = "#FBF3E2";
+const IVORY    = "#FAF0DC";
+const CHARCOAL = "#2C1810";
+const WARM     = "#8C7B6B";
+const LINE     = "rgba(125,43,62,0.18)";
+
+function Ornament() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-px flex-1" style={{ background: `rgba(197,161,50,0.45)` }} />
+      <span className="text-xs" style={{ color: GOLD }}>◆</span>
+      <div className="h-px flex-1" style={{ background: `rgba(197,161,50,0.45)` }} />
+    </div>
+  );
+}
 
 export default function AppDashboard() {
   const [tools, setTools] = useState<ToolApp[]>(defaultApps);
@@ -34,6 +46,7 @@ export default function AppDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
+  const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({});
   const importInputRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef<string>("");
 
@@ -65,291 +78,233 @@ export default function AppDashboard() {
   const categories = useMemo(() => [...new Set(tools.map((app) => app.category || "Uncategorized"))], [tools]);
   const visibleCategories = selectedCategory ? categories.filter((category) => category === selectedCategory) : categories;
 
-  function addTool(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function addTool(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (!form.name.trim()) return;
-
-    const newTool = {
+    setTools((cur) => [{
       ...form,
       name: form.name.trim(),
       category: form.category.trim() || "Uncategorized",
       description: form.description.trim(),
-      stack: stackInput.split(",").map((item) => item.trim()).filter(Boolean),
+      stack: stackInput.split(",").map((s) => s.trim()).filter(Boolean),
       url: form.url.trim() || "#",
-      repo: form.repo?.trim() || ""
-    };
-
-    setTools((current) => [newTool, ...current]);
+      repo: form.repo?.trim() || "",
+    }, ...cur]);
     setForm(emptyForm);
     setStackInput("");
     setActiveTab("dashboard");
   }
 
   function removeTool(name: string) {
-    setTools((current) => current.filter((tool) => tool.name !== name));
+    setTools((cur) => cur.filter((t) => t.name !== name));
   }
 
-  function resetTools() {
-    setTools(defaultApps);
-    setSelectedCategory(null);
+  function cycleStatus(name: string) {
+    setTools((cur) => cur.map((t) => {
+      if (t.name !== name) return t;
+      const idx = statuses.indexOf(t.status);
+      return { ...t, status: statuses[(idx + 1) % statuses.length] };
+    }));
+  }
+
+  function updateNotes(name: string, notes: string) {
+    setTools((cur) => cur.map((t) => t.name === name ? { ...t, notes } : t));
   }
 
   function exportJson() {
     const blob = new Blob([JSON.stringify(tools, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "apps.json";
-    link.click();
+    const a = document.createElement("a");
+    a.href = url; a.download = "apps.json"; a.click();
     URL.revokeObjectURL(url);
   }
 
-  function importJson(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  function importJson(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const parsed = JSON.parse(String(reader.result)) as ToolApp[];
-        if (!Array.isArray(parsed)) return;
-
-        setTools(parsed);
-        setSelectedCategory(null);
-      } catch {
-        return;
-      } finally {
-        event.target.value = "";
-      }
+        if (Array.isArray(parsed)) { setTools(parsed); setSelectedCategory(null); }
+      } catch { /* ignore */ } finally { e.target.value = ""; }
     };
     reader.readAsText(file);
   }
 
+  const inputCls = "w-full px-3 py-2 text-sm rounded-sm outline-none";
+  const inputStyle = { background: CREAM, border: `1px solid ${LINE}`, color: CHARCOAL, fontFamily: "Georgia, serif" };
+
   return (
-    <main className="min-h-screen px-4 py-6 text-[var(--ink)] sm:px-8 lg:px-10">
-      <section className="mx-auto w-full max-w-[1580px] overflow-hidden rounded-[28px] border border-[var(--line)] bg-[linear-gradient(135deg,rgba(255,248,234,0.86),rgba(238,228,211,0.60)),radial-gradient(circle_at_78%_8%,rgba(194,145,93,0.18),transparent_30%),radial-gradient(circle_at_8%_88%,rgba(82,106,104,0.14),transparent_32%)] shadow-[0_34px_120px_rgba(67,55,43,0.18)] backdrop-blur-xl">
-        <div className="border-b border-[var(--line)] bg-[rgba(255,248,234,0.42)] px-5 py-5 sm:px-8 lg:px-10">
-          <header className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="grid size-16 place-items-center rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.72)] shadow-[0_18px_40px_rgba(67,55,43,0.10)]">
-                <Image src="/noctua-logo.png" alt="Noctua" width={54} height={54} className="h-12 w-auto object-contain" priority />
-              </div>
-              <div>
-                <h1 className="text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)] sm:text-5xl">App Dashboard</h1>
-                <p className="mt-1 text-sm font-semibold text-[var(--tweed)]">
-                  {loading ? "Chargement…" : `${tools.length} apps · ${categories.length} categories`}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex w-fit rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.64)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)]">
-              <button onClick={() => setActiveTab("dashboard")} className={`rounded-full px-5 py-2.5 text-sm font-black transition ${activeTab === "dashboard" ? "bg-[var(--petrol)] text-[var(--cream)] shadow-[0_12px_28px_rgba(82,106,104,0.20)]" : "text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
-                Dashboard
-              </button>
-              <button onClick={() => setActiveTab("settings")} className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-black transition ${activeTab === "settings" ? "bg-[var(--petrol)] text-[var(--cream)] shadow-[0_12px_28px_rgba(82,106,104,0.20)]" : "text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
-                <Settings className="size-4" />
-                Settings
-              </button>
-            </div>
-          </header>
+    <main style={{ background: CREAM, fontFamily: "Georgia, serif", minHeight: "100vh" }}>
+      {/* ── Hotel header ── */}
+      <header style={{ background: BORDEAUX, color: CREAM }} className="text-center py-8 px-6">
+        <Ornament />
+        <h1 className="text-4xl sm:text-5xl font-black tracking-[-0.02em] my-3">HÔTEL SÉMANTIC</h1>
+        <p className="text-xs tracking-[0.35em] uppercase" style={{ color: "#E8D5A3" }}>
+          {loading ? "Chargement…" : `Concierge des applications · ${tools.length} services`}
+        </p>
+        <div className="mt-2"><Ornament /></div>
+        <div className="flex justify-center gap-0 mt-5">
+          {(["dashboard", "settings"] as const).map((tab) => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className="px-7 py-2 text-xs tracking-[0.22em] uppercase font-semibold transition-all"
+              style={{ background: activeTab === tab ? GOLD : "transparent", color: activeTab === tab ? CHARCOAL : "#E8D5A3", border: `1px solid ${activeTab === tab ? GOLD : "rgba(197,161,50,0.35)"}` }}>
+              {tab === "dashboard" ? "Hall" : "Réception"}
+            </button>
+          ))}
         </div>
+      </header>
 
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-10">
         {activeTab === "dashboard" ? (
-          tools.length === 0 ? (
-            <div className="grid min-h-[58vh] place-items-center p-8 text-center">
-              <div className="max-w-md rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.62)] p-10 shadow-[0_24px_70px_var(--shadow)]">
-                <h2 className="text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)]">No apps yet</h2>
-                <p className="mt-3 text-sm font-semibold leading-6 text-[var(--tweed-deep)]">Ajoute tes vraies apps dans Settings pour construire ton dashboard Noctua.</p>
-                <button onClick={() => setActiveTab("settings")} className="mt-6 rounded-full bg-[var(--petrol)] px-6 py-3 text-sm font-black text-[var(--cream)] transition hover:bg-[var(--petrol-deep)]">
-                  Open Settings
+          <div className="flex gap-8">
+            {/* Concierge sidebar */}
+            <aside className="hidden lg:flex flex-col gap-1 w-52 flex-shrink-0">
+              <p className="text-[9px] tracking-[0.4em] uppercase font-bold mb-3" style={{ color: WARM }}>◆ Ailes &amp; Services</p>
+              {[{ label: "Toutes les ailes", count: tools.length, val: null as string | null }, ...categories.map((c) => ({ label: c, count: tools.filter((t) => t.category === c).length, val: c }))].map(({ label, count, val }) => (
+                <button key={label} onClick={() => setSelectedCategory(val)}
+                  className="text-left px-3 py-2 rounded-sm text-xs transition-all"
+                  style={{ background: selectedCategory === val ? BORDEAUX : "rgba(125,43,62,0.07)", color: selectedCategory === val ? CREAM : CHARCOAL, border: `1px solid ${selectedCategory === val ? BORDEAUX : LINE}` }}>
+                  {label}<span className="float-right opacity-50">{count}</span>
                 </button>
+              ))}
+              <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${LINE}` }}>
+                <button onClick={exportJson} className="flex items-center gap-2 text-xs px-3 py-2 w-full rounded-sm hover:opacity-70" style={{ color: WARM }}><Download className="w-3 h-3" />Exporter JSON</button>
+                <button onClick={() => importInputRef.current?.click()} className="flex items-center gap-2 text-xs px-3 py-2 w-full rounded-sm hover:opacity-70" style={{ color: WARM }}><Upload className="w-3 h-3" />Importer JSON</button>
+                <input type="file" accept=".json" ref={importInputRef} onChange={importJson} className="hidden" />
               </div>
-            </div>
-          ) : (
-            <div className="grid gap-6 p-5 lg:grid-cols-[270px_minmax(0,1fr)] lg:p-8 xl:p-10">
-              <aside className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.50)] p-5 shadow-[0_22px_58px_var(--shadow)] backdrop-blur-md">
-                <div className="mb-6">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--copper)]">Categories</p>
-                  <h2 className="mt-1 text-2xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">Workspace</h2>
+            </aside>
+
+            {/* Card grid */}
+            <div className="flex-1 min-w-0">
+              {tools.length === 0 && !loading && (
+                <div className="text-center py-24">
+                  <p className="text-2xl font-black" style={{ color: BORDEAUX }}>Aucune chambre disponible</p>
+                  <p className="text-sm mt-2" style={{ color: WARM }}>Rendez-vous à la Réception pour enregistrer une application.</p>
+                  <button onClick={() => setActiveTab("settings")} className="mt-5 px-6 py-2 text-xs tracking-[0.2em] uppercase font-semibold" style={{ background: BORDEAUX, color: CREAM }}>Réception →</button>
                 </div>
-                <div className="space-y-2">
-                  <button onClick={() => setSelectedCategory(null)} className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] transition ${selectedCategory === null ? "border-[rgba(82,106,104,0.42)] bg-[var(--petrol)] text-[var(--cream)]" : "border-[var(--line)] bg-[rgba(255,248,234,0.56)] text-[var(--petrol-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
-                    <span className="text-sm font-black">All apps</span>
-                    <span className={`rounded-full px-2 py-1 text-[10px] font-black ${selectedCategory === null ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(194,145,93,0.14)] text-[var(--tweed-deep)]"}`}>{tools.length}</span>
-                  </button>
-                  {categories.map((category, categoryIndex) => {
-                    const CategoryIcon = icons[categoryIndex % icons.length];
-                    const categoryApps = tools.filter((app) => app.category === category);
-                    const isSelected = selectedCategory === category;
-
-                    return (
-                      <button key={category} onClick={() => setSelectedCategory(category)} className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] transition ${isSelected ? "border-[rgba(82,106,104,0.42)] bg-[var(--petrol)] text-[var(--cream)]" : "border-[var(--line)] bg-[rgba(255,248,234,0.56)] text-[var(--petrol-deep)] hover:bg-[rgba(255,248,234,0.78)]"}`}>
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className={`grid size-9 shrink-0 place-items-center rounded-xl ${isSelected ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(82,106,104,0.12)] text-[var(--petrol)]"}`}>
-                            <CategoryIcon className="size-4" />
-                          </div>
-                          <span className="truncate text-sm font-black">{category}</span>
-                        </div>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-black ${isSelected ? "bg-[rgba(255,248,234,0.16)] text-[var(--cream)]" : "bg-[rgba(194,145,93,0.14)] text-[var(--tweed-deep)]"}`}>{categoryApps.length}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </aside>
-
-              <div className="space-y-6">
-                <section className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.58)] p-5 shadow-[0_22px_58px_var(--shadow)]">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tweed)]">Apps</p>
-                    <p className="mt-2 text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)]">{tools.length}</p>
-                  </div>
-                  <div className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.58)] p-5 shadow-[0_22px_58px_var(--shadow)]">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tweed)]">Categories</p>
-                    <p className="mt-2 text-4xl font-black tracking-[-0.06em] text-[var(--petrol-deep)]">{categories.length}</p>
-                  </div>
-                  <button onClick={() => setActiveTab("settings")} className="rounded-3xl border border-[var(--line)] bg-[var(--petrol)] p-5 text-left shadow-[0_22px_58px_rgba(82,106,104,0.22)] transition hover:bg-[var(--petrol-deep)]">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--sand)]">Manage</p>
-                    <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-[var(--cream)]">Add an app</p>
-                  </button>
-                </section>
-
-                {visibleCategories.map((category) => {
-                  const categoryIndex = categories.indexOf(category);
-                  const categoryApps = tools.filter((app) => app.category === category);
-                  const CategoryIcon = icons[categoryIndex % icons.length];
-
-                  return (
-                    <section key={category} className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.44)] p-4 shadow-[0_24px_70px_var(--shadow)] backdrop-blur-md sm:p-5">
-                      <div className="mb-4 flex flex-col gap-2 border-b border-[var(--line)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="grid size-11 place-items-center rounded-2xl bg-[rgba(194,145,93,0.14)] text-[var(--copper)]">
-                            <CategoryIcon className="size-5" />
-                          </div>
-                          <div>
-                            <h2 className="text-2xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">{category}</h2>
-                            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--tweed)]">{categoryApps.length} apps</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {categoryApps.map((app, appIndex) => {
-                          const AppIcon = icons[(categoryIndex + appIndex + 1) % icons.length];
-
-                          return (
-                            <article key={`${app.name}-${app.url}`} className="group flex min-h-[232px] flex-col justify-between rounded-[26px] border border-[rgba(82,106,104,0.28)] bg-[linear-gradient(160deg,rgba(255,255,250,0.94),rgba(220,232,229,0.46)_54%,rgba(194,145,93,0.10))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_22px_58px_rgba(82,106,104,0.14)] ring-1 ring-white/45 transition hover:-translate-y-1 hover:border-[rgba(82,106,104,0.42)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.82),0_28px_72px_rgba(82,106,104,0.18)]">
-                              <div>
-                                <div className="mb-5 flex items-start justify-between gap-4">
-                                  <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[rgba(82,106,104,0.12)] text-[var(--petrol)] transition group-hover:bg-[var(--petrol)] group-hover:text-[var(--cream)]">
-                                    <AppIcon className="size-5" />
-                                  </div>
-                                  <span className={`max-w-[150px] rounded-full border px-3 py-1 text-center text-[10px] font-black uppercase tracking-[0.10em] leading-4 ${statusStyles[app.status]}`}>
-                                    {app.status}
-                                  </span>
-                                </div>
-                                <h3 className="text-2xl font-black leading-7 tracking-[-0.05em] text-[var(--ink)]">{app.name}</h3>
-                                <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-[var(--tweed-deep)]">{app.description || "No description yet."}</p>
-                              </div>
-
-                              <div>
-                                {app.stack.length ? (
-                                  <div className="mt-6 flex flex-wrap gap-2">
-                                    {app.stack.slice(0, 4).map((tech) => (
-                                      <span key={tech} className="rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.70)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--tweed-deep)]">
-                                        {tech}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : null}
-
-                                <div className="mt-6 flex items-center gap-3">
-                                  <a href={app.url} className="inline-flex items-center gap-1 rounded-full bg-[var(--petrol)] px-4 py-2 text-xs font-black text-[var(--cream)] shadow-[0_12px_28px_rgba(82,106,104,0.16)] transition hover:bg-[var(--petrol-deep)]">
-                                    Open
-                                    <ArrowUpRight className="size-3.5" />
-                                  </a>
-                                  {app.repo ? (
-                                    <a href={app.repo} className="inline-flex items-center gap-1 text-xs font-black text-[var(--tweed-deep)] hover:text-[var(--petrol)]">
-                                      <Github className="size-3.5" />
-                                      GitHub
-                                    </a>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  );
-                })}
-              </div>
-            </div>
-          )
-        ) : (
-          <div className="grid gap-6 p-5 lg:grid-cols-[0.95fr_1.05fr] lg:p-8 xl:p-10">
-            <form onSubmit={addTool} className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.58)] p-6 shadow-[0_24px_70px_var(--shadow)] backdrop-blur-md">
-              <h2 className="mb-5 flex items-center gap-2 text-3xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">
-                <Plus className="size-6 text-[var(--copper)]" />
-                Add app
-              </h2>
-
-              <div className="grid gap-3">
-                <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Nom de l'app" className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Catégorie" className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-                <textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Description" rows={4} className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-                <input value={stackInput} onChange={(event) => setStackInput(event.target.value)} placeholder="Stack séparée par virgules: Next.js, Vercel, Supabase" className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-                <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as ToolStatus })} className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2">
-                  {statuses.map((status) => <option key={status}>{status}</option>)}
-                </select>
-                <input value={form.url} onChange={(event) => setForm({ ...form, url: event.target.value })} placeholder="URL de l'app" className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-                <input value={form.repo} onChange={(event) => setForm({ ...form, repo: event.target.value })} placeholder="Repo GitHub optionnel" className="rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.78)] px-4 py-3 text-sm font-semibold outline-none ring-[var(--copper)] focus:ring-2" />
-              </div>
-
-              <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-[var(--petrol)] px-6 py-3 text-sm font-black text-[var(--cream)] shadow-[0_16px_36px_rgba(82,106,104,0.18)] transition hover:bg-[var(--petrol-deep)]">
-                <Save className="size-4" />
-                Save app
-              </button>
-            </form>
-
-            <section className="rounded-3xl border border-[var(--line)] bg-[rgba(255,248,234,0.50)] p-6 shadow-[0_24px_70px_var(--shadow)] backdrop-blur-md">
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-3xl font-black tracking-[-0.05em] text-[var(--petrol-deep)]">Apps</h2>
-                  <p className="mt-1 text-xs font-bold text-[var(--tweed-deep)]">Export this list, then copy it into data/apps.json to publish it for everyone.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button onClick={exportJson} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.70)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.92)]">
-                    <Download className="size-3.5" />
-                    Export JSON
-                  </button>
-                  <button onClick={() => importInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.70)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.92)]">
-                    <Upload className="size-3.5" />
-                    Import JSON
-                  </button>
-                  <button onClick={resetTools} className="rounded-full border border-[var(--line)] bg-[rgba(255,248,234,0.62)] px-4 py-2 text-xs font-black text-[var(--tweed-deep)] hover:bg-[rgba(255,248,234,0.86)]">
-                    Reset official
-                  </button>
-                  <input ref={importInputRef} type="file" accept="application/json" onChange={importJson} className="hidden" />
-                </div>
-              </div>
-
-              <div className="grid max-h-[560px] gap-3 overflow-auto pr-1">
-                {tools.map((tool) => (
-                  <div key={`${tool.name}-${tool.url}`} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[rgba(255,248,234,0.58)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-                    <div className="min-w-0">
-                      <h3 className="truncate text-base font-black text-[var(--ink)]">{tool.name}</h3>
-                      <p className="truncate text-xs font-bold text-[var(--tweed-deep)]">{tool.category} · {tool.status}</p>
+              )}
+              {visibleCategories.map((cat, catIdx) => {
+                const catTools = tools.filter((t) => (t.category || "Uncategorized") === cat);
+                if (!catTools.length) return null;
+                return (
+                  <section key={cat} className="mb-10">
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className="h-px flex-1" style={{ background: LINE }} />
+                      <span className="text-[9px] tracking-[0.45em] uppercase font-bold px-3" style={{ color: BORDEAUX }}>Aile {String.fromCharCode(65 + catIdx)} — {cat}</span>
+                      <div className="h-px flex-1" style={{ background: LINE }} />
                     </div>
-                    <button onClick={() => removeTool(tool.name)} className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--line)] text-[var(--tweed-deep)] hover:bg-[rgba(194,145,93,0.12)] hover:text-[var(--copper)]">
-                      <Trash2 className="size-4" />
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                      {catTools.map((tool) => {
+                        const sc = statusConfig[tool.status];
+                        const globalIdx = tools.findIndex((t) => t.name === tool.name);
+                        const notesOpen = openNotes[tool.name] ?? false;
+                        return (
+                          <article key={tool.name} className="flex flex-col rounded-sm overflow-hidden" style={{ background: IVORY, border: `1px solid ${LINE}`, boxShadow: "0 4px 24px rgba(44,24,16,0.07)" }}>
+                            <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${LINE}`, background: "rgba(125,43,62,0.04)" }}>
+                              <span className="text-[9px] tracking-[0.35em] font-bold" style={{ color: GOLD }}>CHAMBRE {String(globalIdx + 1).padStart(3, "0")}</span>
+                              <button onClick={() => cycleStatus(tool.name)} title="Cliquer pour changer le statut"
+                                className={`text-[8px] tracking-[0.18em] px-2 py-0.5 border font-semibold uppercase cursor-pointer hover:opacity-70 transition-opacity rounded-sm ${sc.cls}`}>
+                                {sc.label}
+                              </button>
+                            </div>
+                            <div className="px-4 py-4 flex-1">
+                              <h3 className="text-base font-black tracking-[-0.02em] mb-1" style={{ color: CHARCOAL }}>{tool.name}</h3>
+                              <p className="text-xs leading-relaxed line-clamp-3" style={{ color: WARM }}>{tool.description}</p>
+                              {(tool.stack?.length ?? 0) > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2.5">
+                                  {tool.stack.map((s) => <span key={s} className="text-[9px] px-1.5 py-0.5 rounded-sm" style={{ background: "rgba(197,161,50,0.12)", color: "#7D5C00", border: "1px solid rgba(197,161,50,0.28)" }}>{s}</span>)}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ borderTop: `1px solid ${LINE}` }}>
+                              <button onClick={() => setOpenNotes((s) => ({ ...s, [tool.name]: !notesOpen }))}
+                                className="flex items-center justify-between w-full px-4 py-2 text-xs hover:opacity-70 transition-opacity" style={{ color: WARM }}>
+                                <span className="tracking-[0.15em] uppercase font-semibold text-[10px]">✒ Notes du concierge</span>
+                                {notesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </button>
+                              {notesOpen && (
+                                <div className="px-4 pb-3">
+                                  <textarea value={tool.notes ?? ""} onChange={(e) => updateNotes(tool.name, e.target.value)}
+                                    placeholder="État d'avancement, priorités, idées…" rows={3}
+                                    className="w-full text-xs resize-none rounded-sm px-3 py-2 outline-none"
+                                    style={{ background: CREAM, border: `1px solid ${LINE}`, color: CHARCOAL, fontFamily: "Georgia, serif", lineHeight: "1.6" }} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2 px-4 py-3" style={{ borderTop: `1px solid ${LINE}`, background: "rgba(125,43,62,0.03)" }}>
+                              <a href={tool.url} target="_blank" rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-sm text-xs font-bold tracking-[0.1em] uppercase hover:opacity-80 transition-opacity"
+                                style={{ background: BORDEAUX, color: CREAM }}>
+                                <ArrowUpRight className="w-3 h-3" /> Accéder
+                              </a>
+                              {tool.repo && <a href={tool.repo} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-sm hover:opacity-70 transition-opacity" style={{ border: `1px solid ${LINE}`, color: BORDEAUX }}><Github className="w-3 h-3" /></a>}
+                              <button onClick={() => removeTool(tool.name)} className="px-3 py-1.5 rounded-sm hover:opacity-70 transition-opacity" style={{ border: `1px solid ${LINE}`, color: "#C9897A" }}><Trash2 className="w-3 h-3" /></button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-lg mx-auto">
+            <div className="rounded-sm overflow-hidden" style={{ border: `1px solid ${LINE}`, background: IVORY, boxShadow: "0 8px 40px rgba(44,24,16,0.08)" }}>
+              <div className="px-8 py-5" style={{ borderBottom: `1px solid ${LINE}`, background: "rgba(125,43,62,0.03)" }}>
+                <p className="text-[9px] tracking-[0.45em] uppercase font-bold mb-1" style={{ color: GOLD }}>◆ RÉCEPTION</p>
+                <h2 className="text-xl font-black" style={{ color: CHARCOAL }}>Enregistrer une application</h2>
+              </div>
+              <form onSubmit={addTool} className="px-8 py-6 flex flex-col gap-4">
+                {([
+                  { key: "name", label: "Nom du service", placeholder: "ex. Keyword Research", required: true },
+                  { key: "description", label: "Description", placeholder: "Ce que fait cet outil…" },
+                  { key: "url", label: "URL", placeholder: "https://…" },
+                  { key: "repo", label: "Dépôt GitHub", placeholder: "https://github.com/…" },
+                  { key: "category", label: "Aile / Catégorie", placeholder: "ex. SEO Technique" },
+                ] as { key: keyof ToolApp; label: string; placeholder: string; required?: boolean }[]).map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-[9px] tracking-[0.35em] uppercase font-semibold mb-1.5" style={{ color: WARM }}>{f.label}</label>
+                    <input value={(form[f.key] as string) ?? ""} onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                      placeholder={f.placeholder} required={f.required} className={inputCls} style={inputStyle} />
                   </div>
                 ))}
-              </div>
-            </section>
+                <div>
+                  <label className="block text-[9px] tracking-[0.35em] uppercase font-semibold mb-1.5" style={{ color: WARM }}>Stack (virgules)</label>
+                  <input value={stackInput} onChange={(e) => setStackInput(e.target.value)} placeholder="Next.js, Python, Supabase…" className={inputCls} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-[9px] tracking-[0.35em] uppercase font-semibold mb-1.5" style={{ color: WARM }}>Statut</label>
+                  <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as ToolStatus }))} className={inputCls} style={inputStyle}>
+                    {statuses.map((s) => <option key={s} value={s}>{statusConfig[s].label} — {s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[9px] tracking-[0.35em] uppercase font-semibold mb-1.5" style={{ color: WARM }}>Notes initiales</label>
+                  <textarea value={form.notes ?? ""} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                    placeholder="État d'avancement, priorités…" rows={3} className="w-full px-3 py-2 text-sm resize-none rounded-sm outline-none" style={inputStyle} />
+                </div>
+                <button type="submit" className="flex items-center justify-center gap-2 py-3 text-xs tracking-[0.25em] uppercase font-bold rounded-sm hover:opacity-90 transition-opacity" style={{ background: BORDEAUX, color: CREAM }}>
+                  <Plus className="w-4 h-4" /> Enregistrer la chambre
+                </button>
+              </form>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button onClick={exportJson} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs tracking-[0.18em] uppercase rounded-sm hover:opacity-70" style={{ border: `1px solid ${LINE}`, color: BORDEAUX }}><Download className="w-3 h-3" />Exporter</button>
+              <button onClick={() => importInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 py-2 text-xs tracking-[0.18em] uppercase rounded-sm hover:opacity-70" style={{ border: `1px solid ${LINE}`, color: BORDEAUX }}><Upload className="w-3 h-3" />Importer</button>
+              <input type="file" accept=".json" ref={importInputRef} onChange={importJson} className="hidden" />
+            </div>
           </div>
         )}
-      </section>
+      </div>
+
+      <footer className="text-center py-6 mt-4" style={{ borderTop: `1px solid ${LINE}`, color: WARM }}>
+        <p className="text-[9px] tracking-[0.4em] uppercase">◆ Hôtel Sémantic · Concierge des Applications ◆</p>
+      </footer>
     </main>
   );
 }
+

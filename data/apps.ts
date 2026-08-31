@@ -10,6 +10,7 @@ export type ToolApp = {
   status: ToolStatus;
   url: string;
   repo?: string;
+  notes?: string;
 };
 
 export const apps = officialApps as ToolApp[];
