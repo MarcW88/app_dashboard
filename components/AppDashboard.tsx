@@ -208,13 +208,13 @@ export default function AppDashboard() {
               ))}
             </div>
             <div className="flex items-center gap-1.5" style={{ borderLeft: `1px solid ${C.border}`, paddingLeft: "0.75rem" }}>
-              <a href={process.env.NEXT_PUBLIC_SEO_GEO_LAB_URL ?? "#"} target="_blank" rel="noopener noreferrer"
+              <a href={process.env.NEXT_PUBLIC_SEO_GEO_LAB_URL ?? "https://seo-geo-lab-liard.vercel.app/"} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1 px-3 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
                 style={{ border: `1px solid ${C.border}`, color: C.textMed }}>
                 <ArrowUpRight className="w-2.5 h-2.5" /> SEO/GEO LAB
               </a>
               {isOwner && (
-                <a href={process.env.NEXT_PUBLIC_TICKETING_URL ?? "#"} target="_blank" rel="noopener noreferrer"
+                <a href={process.env.NEXT_PUBLIC_TICKETING_URL ?? "https://ticketing-dvw9rs7bi-marc-williame-s-projects.vercel.app/"} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 px-3 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
                   style={{ border: `1px solid ${C.accent}`, color: C.accent }}>
                   <ArrowUpRight className="w-2.5 h-2.5" /> TICKETING
