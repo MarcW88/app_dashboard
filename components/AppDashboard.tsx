@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, ChevronUp, Download, Github, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowUpRight, Download, Github, Plus, Trash2, Upload, X } from "lucide-react";
 import type { ToolApp, ToolStatus } from "@/data/apps";
 import { apps as defaultApps } from "@/data/apps";
 
@@ -28,12 +28,12 @@ const C = {
 };
 
 const statusConfig: Record<ToolStatus, { label: string; color: string; bg: string; dot: string }> = {
-  "Stable":        { label: "ONLINE",      color: C.green,   bg: C.greenDim,  dot: C.green },
-  "Client-ready":  { label: "DEPLOYED",    color: C.green,   bg: C.greenDim,  dot: C.green },
-  "MVP":           { label: "ACTIVE",      color: C.amber,   bg: C.amberDim,  dot: C.amber },
-  "Prototype":     { label: "DEV BUILD",   color: C.textMed, bg: C.borderDim, dot: C.textMed },
-  "À améliorer":   { label: "MAINTENANCE", color: C.amber,   bg: C.amberDim,  dot: C.amber },
-  "Internal only": { label: "CLASSIFIED",  color: C.red,     bg: C.redDim,    dot: C.red },
+  "Stable":        { label: "Stable",        color: C.green,   bg: C.greenDim,  dot: C.green },
+  "Client-ready":  { label: "Client-ready",  color: C.green,   bg: C.greenDim,  dot: C.green },
+  "MVP":           { label: "MVP",           color: C.amber,   bg: C.amberDim,  dot: C.amber },
+  "Prototype":     { label: "Prototype",     color: C.textMed, bg: C.borderDim, dot: C.textMed },
+  "À améliorer":   { label: "À améliorer",  color: C.amber,   bg: C.amberDim,  dot: C.amber },
+  "Internal only": { label: "Internal only", color: C.red,     bg: C.redDim,    dot: C.red },
 };
 
 const emptyForm: ToolApp = {
@@ -54,10 +54,11 @@ export default function AppDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
-  const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({});
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef<string>("");
   const now = useClock();
+  const detailTool = selectedTool ? tools.find((t) => t.name === selectedTool) ?? null : null;
 
   useEffect(() => {
     fetch("/api/apps")
@@ -155,8 +156,8 @@ export default function AppDashboard() {
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-0.5" style={{ color: C.textDim }}>BRU / 50.8503°N · 4.3517°E</p>
-            <h1 className="text-lg font-black tracking-[0.12em] uppercase" style={{ color: C.text }}>SEMANTIC CONTROL</h1>
-            <p className="text-[8px] font-mono tracking-[0.4em] uppercase mt-0.5" style={{ color: C.textMed }}>OPERATIONS DASHBOARD / {dateStr} / {timeStr}</p>
+            <h1 className="text-lg font-black tracking-[0.12em] uppercase" style={{ color: C.text }}>SEO TOOLS HUB</h1>
+            <p className="text-[8px] font-mono tracking-[0.4em] uppercase mt-0.5" style={{ color: C.textMed }}>{dateStr} · {timeStr}</p>
           </div>
           <div className="flex items-center gap-6 flex-wrap">
             {!loading && (
@@ -188,12 +189,15 @@ export default function AppDashboard() {
             </div>
           </div>
         </div>
-        <div style={{ borderTop: `1px solid ${C.borderDim}` }} className="px-6 py-1">
+        <div style={{ borderTop: `1px solid ${C.borderDim}`, position: "relative", overflow: "hidden" }} className="px-6 py-1">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-            <span className="text-[8px] font-mono tracking-[0.45em] uppercase" style={{ color: C.textDim }}>SECTOR 01 / NODE A / INTELLIGENCE SYSTEM</span>
+            <span className="text-[8px] font-mono tracking-[0.45em] uppercase" style={{ color: C.textDim }}>{tools.length} SYSTEMS REGISTERED</span>
             <span className="text-[8px] font-mono tracking-[0.3em] uppercase" style={{ color: C.textDim }}>
-              {loading ? "CONNECTING…" : "LINK ESTABLISHED"}&nbsp;<span style={{ color: C.green }}>◆</span>
+              {loading ? "LOADING…" : "READY"}&nbsp;<span style={{ color: C.green }}>&#9670;</span>
             </span>
+          </div>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", pointerEvents: "none", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, height: "1px", width: "40%", background: `linear-gradient(90deg, transparent, ${C.accent}60, transparent)`, animation: "scanLine 7s linear infinite" }} />
           </div>
         </div>
       </header>
@@ -257,18 +261,18 @@ export default function AppDashboard() {
                       {catTools.map((tool) => {
                         const sc = statusConfig[tool.status];
                         const gIdx = tools.findIndex((t) => t.name === tool.name);
-                        const notesOpen = openNotes[tool.name] ?? false;
                         return (
                           <article key={tool.name}
-                            className="flex flex-col transition-all duration-150"
-                            style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.borderDim}` }}
+                            className="flex flex-col transition-all duration-200 cursor-pointer"
+                            style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `2px solid ${C.borderDim}`, animation: "fadeUp 0.35s ease both", animationDelay: `${gIdx * 55}ms` }}
+                            onClick={() => setSelectedTool(tool.name)}
                             onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderLeftColor = C.accent; el.style.background = C.panelHov; }}
                             onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderLeftColor = C.borderDim; el.style.background = C.panel; }}>
                             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${C.borderDim}` }}>
                               <span className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>
                                 SYS-{String(gIdx + 1).padStart(2, "0")}
                               </span>
-                              <button onClick={() => cycleStatus(tool.name)} title="Click to cycle status"
+                              <button onClick={(e) => { e.stopPropagation(); cycleStatus(tool.name); }} title="Click to cycle status"
                                 className="flex items-center gap-1.5 text-[8px] font-mono tracking-[0.2em] uppercase px-2 py-0.5 hover:opacity-70 transition-opacity"
                                 style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.color}30` }}>
                                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse" style={{ background: sc.dot }} />
@@ -277,9 +281,15 @@ export default function AppDashboard() {
                             </div>
                             <div className="px-4 py-4 flex-1">
                               <h3 className="text-sm font-black tracking-[0.06em] uppercase mb-1.5" style={{ color: C.text }}>{tool.name}</h3>
-                              <p className="text-[10px] leading-relaxed line-clamp-2" style={{ color: C.textMed }}>{tool.description}</p>
+                              <p className="text-[10px] leading-relaxed line-clamp-2 mb-3" style={{ color: C.textMed }}>{tool.description}</p>
+                              {tool.notes?.trim() && (
+                                <p className="text-[9px] font-mono leading-relaxed line-clamp-2 px-2 py-1.5 mb-3"
+                                  style={{ background: C.borderDim, color: C.textMed, borderLeft: `2px solid ${C.accent}60` }}>
+                                  {tool.notes.trim()}
+                                </p>
+                              )}
                               {(tool.stack?.length ?? 0) > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                <div className="flex flex-wrap gap-1.5">
                                   {tool.stack.map((s) => (
                                     <span key={s} className="text-[8px] font-mono tracking-[0.1em] px-1.5 py-0.5 uppercase"
                                       style={{ background: C.borderDim, color: C.textMed, border: `1px solid ${C.border}` }}>{s}</span>
@@ -287,23 +297,8 @@ export default function AppDashboard() {
                                 </div>
                               )}
                             </div>
-                            <div style={{ borderTop: `1px solid ${C.borderDim}` }}>
-                              <button onClick={() => setOpenNotes((s) => ({ ...s, [tool.name]: !notesOpen }))}
-                                className="flex items-center justify-between w-full px-4 py-2 text-[8px] font-mono tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
-                                style={{ color: C.textDim }}>
-                                <span>// FIELD NOTES</span>
-                                {notesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                              </button>
-                              {notesOpen && (
-                                <div className="px-4 pb-3">
-                                  <textarea value={tool.notes ?? ""} onChange={(e) => updateNotes(tool.name, e.target.value)}
-                                    placeholder="Operational notes, intel, priorities…" rows={3}
-                                    className="w-full text-[10px] font-mono resize-none px-3 py-2 outline-none"
-                                    style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.textMed, lineHeight: "1.7" }} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex gap-2 px-4 py-3" style={{ borderTop: `1px solid ${C.borderDim}` }}>
+                            <div className="flex gap-2 px-4 py-3" style={{ borderTop: `1px solid ${C.borderDim}` }}
+                              onClick={(e) => e.stopPropagation()}>
                               <a href={tool.url} target="_blank" rel="noopener noreferrer"
                                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
                                 style={{ background: C.accent, color: "#fff" }}>
@@ -417,10 +412,90 @@ export default function AppDashboard() {
 
       <footer className="mt-12" style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>SEMANTIC CONTROL / OPERATIONS DASHBOARD</span>
+          <span className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>SEO TOOLS HUB</span>
           <span className="text-[8px] font-mono tracking-[0.35em] uppercase" style={{ color: C.textDim }}>BRU · {dateStr} · {timeStr}</span>
         </div>
       </footer>
+
+      {/* ── SLIDE-OVER DETAIL PANEL ── */}
+      {detailTool && (
+        <>
+          <div className="fixed inset-0 z-40" style={{ background: "rgba(0,0,0,0.65)" }}
+            onClick={() => setSelectedTool(null)} />
+          <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-lg flex flex-col"
+            style={{ background: C.surface, borderLeft: `1px solid ${C.border}`, animation: "slideInRight 0.25s ease" }}>
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <div className="flex items-center gap-3">
+                <span className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>
+                  SYS-{String(tools.findIndex((t) => t.name === detailTool.name) + 1).padStart(2, "0")}
+                </span>
+                <button onClick={() => cycleStatus(detailTool.name)}
+                  className="flex items-center gap-1.5 text-[8px] font-mono tracking-[0.2em] uppercase px-2 py-0.5 hover:opacity-70 transition-opacity"
+                  style={{ background: statusConfig[detailTool.status].bg, color: statusConfig[detailTool.status].color, border: `1px solid ${statusConfig[detailTool.status].color}30` }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: statusConfig[detailTool.status].dot }} />
+                  {statusConfig[detailTool.status].label}
+                </button>
+              </div>
+              <button onClick={() => setSelectedTool(null)} className="p-1.5 hover:opacity-70 transition-opacity" style={{ color: C.textMed }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Panel body */}
+            <div className="px-6 py-6 flex-1 flex flex-col gap-5 overflow-y-auto">
+              <div>
+                <h2 className="text-xl font-black tracking-[0.04em] uppercase mb-1.5" style={{ color: C.text }}>{detailTool.name}</h2>
+                {detailTool.category && (
+                  <p className="text-[8px] font-mono tracking-[0.3em] uppercase" style={{ color: C.textDim }}>{detailTool.category}</p>
+                )}
+                <p className="text-xs leading-relaxed mt-2" style={{ color: C.textMed }}>{detailTool.description}</p>
+              </div>
+              {(detailTool.stack?.length ?? 0) > 0 && (
+                <div>
+                  <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-2" style={{ color: C.textDim }}>STACK</p>
+                  <div className="flex flex-wrap gap-2">
+                    {detailTool.stack.map((s) => (
+                      <span key={s} className="text-xs font-mono px-2 py-1 uppercase"
+                        style={{ background: C.borderDim, color: C.textMed, border: `1px solid ${C.border}` }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex-1 flex flex-col">
+                <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-2" style={{ color: C.textDim }}>NOTES &amp; PROGRESSION</p>
+                <textarea
+                  value={detailTool.notes ?? ""}
+                  onChange={(e) => updateNotes(detailTool.name, e.target.value)}
+                  placeholder="Où en est l'outil ? Prochaines améliorations, bugs connus, priorités…"
+                  rows={10}
+                  className="flex-1 w-full text-xs font-mono resize-none px-4 py-3 outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.text, lineHeight: "1.8" }}
+                />
+              </div>
+            </div>
+            {/* Panel footer */}
+            <div className="px-6 py-4 flex gap-2 flex-shrink-0" style={{ borderTop: `1px solid ${C.border}` }}>
+              <a href={detailTool.url} target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[9px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
+                style={{ background: C.accent, color: "#fff" }}>
+                <ArrowUpRight className="w-3.5 h-3.5" /> LAUNCH
+              </a>
+              {detailTool.repo && (
+                <a href={detailTool.repo} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2.5 text-[9px] font-mono tracking-[0.2em] uppercase hover:opacity-70 transition-opacity"
+                  style={{ border: `1px solid ${C.border}`, color: C.textMed }}>
+                  <Github className="w-3.5 h-3.5" /> REPO
+                </a>
+              )}
+              <button onClick={() => { removeTool(detailTool.name); setSelectedTool(null); }}
+                className="flex items-center gap-2 px-4 py-2.5 text-[9px] font-mono tracking-[0.2em] uppercase hover:opacity-70 transition-opacity"
+                style={{ border: `1px solid ${C.border}`, color: C.red }}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }
