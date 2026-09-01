@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Download, Github, Plus, Trash2, Upload, X } from "lucide-react";
+import { ArrowUpRight, Download, Github, Lock, Plus, Trash2, Unlock, Upload, X } from "lucide-react";
 import type { ToolApp, ToolStatus } from "@/data/apps";
 import { apps as defaultApps } from "@/data/apps";
 
@@ -55,10 +55,30 @@ export default function AppDashboard() {
   const [form, setForm] = useState<ToolApp>(emptyForm);
   const [stackInput, setStackInput] = useState("");
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [loginError, setLoginError] = useState("");
   const importInputRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef<string>("");
   const now = useClock();
   const detailTool = selectedTool ? tools.find((t) => t.name === selectedTool) ?? null : null;
+
+  useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((d) => setIsOwner(!!d.isOwner)).catch(() => {});
+  }, []);
+
+  async function handleLogin() {
+    setLoginError("");
+    const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: pinInput }) });
+    if (res.ok) { setIsOwner(true); setShowLogin(false); setPinInput(""); }
+    else { setLoginError("PIN incorrect"); }
+  }
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setIsOwner(false);
+  }
 
   useEffect(() => {
     fetch("/api/apps")
@@ -186,6 +206,27 @@ export default function AppDashboard() {
                   {tab === "dashboard" ? "OPS CENTER" : "CONFIG"}
                 </button>
               ))}
+            </div>
+            <div className="flex items-center gap-1.5" style={{ borderLeft: `1px solid ${C.border}`, paddingLeft: "0.75rem" }}>
+              <a href={process.env.NEXT_PUBLIC_SEO_GEO_LAB_URL ?? "#"} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
+                style={{ border: `1px solid ${C.border}`, color: C.textMed }}>
+                <ArrowUpRight className="w-2.5 h-2.5" /> SEO/GEO LAB
+              </a>
+              {isOwner && (
+                <a href={process.env.NEXT_PUBLIC_TICKETING_URL ?? "#"} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-3 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
+                  style={{ border: `1px solid ${C.accent}`, color: C.accent }}>
+                  <ArrowUpRight className="w-2.5 h-2.5" /> TICKETING
+                </a>
+              )}
+              <button
+                onClick={isOwner ? handleLogout : () => { setShowLogin(true); setLoginError(""); setPinInput(""); }}
+                title={isOwner ? "Déconnexion" : "Accès propriétaire"}
+                className="p-1.5 hover:opacity-70 transition-opacity"
+                style={{ border: `1px solid ${isOwner ? C.accent : C.border}`, color: isOwner ? C.accent : C.textDim }}>
+                {isOwner ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              </button>
             </div>
           </div>
         </div>
@@ -416,6 +457,47 @@ export default function AppDashboard() {
           <span className="text-[8px] font-mono tracking-[0.35em] uppercase" style={{ color: C.textDim }}>BRU · {dateStr} · {timeStr}</span>
         </div>
       </footer>
+
+      {/* ── LOGIN MODAL ── */}
+      {showLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.75)" }}
+          onClick={() => setShowLogin(false)}>
+          <div className="w-80 flex flex-col"
+            style={{ background: C.surface, border: `1px solid ${C.border}`, animation: "fadeUp 0.2s ease" }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <div>
+                <p className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>ACCESS CONTROL</p>
+                <p className="text-sm font-black tracking-[0.06em] uppercase mt-0.5" style={{ color: C.text }}>OWNER AUTH</p>
+              </div>
+              <button onClick={() => setShowLogin(false)} className="p-1 hover:opacity-70" style={{ color: C.textMed }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="px-5 py-5 flex flex-col gap-3">
+              <input
+                type="password"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                placeholder="PIN"
+                autoFocus
+                className="w-full px-3 py-2.5 text-sm font-mono tracking-widest outline-none"
+                style={{ background: C.bg, border: `1px solid ${loginError ? C.red : C.border}`, color: C.text }}
+              />
+              {loginError && (
+                <p className="text-[9px] font-mono" style={{ color: C.red }}>{loginError}</p>
+              )}
+              <button onClick={handleLogin}
+                className="w-full py-2.5 text-[9px] font-mono tracking-[0.3em] uppercase hover:opacity-80 transition-opacity"
+                style={{ background: C.accent, color: "#fff" }}>
+                AUTHENTICATE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── SLIDE-OVER DETAIL PANEL ── */}
       {detailTool && (
