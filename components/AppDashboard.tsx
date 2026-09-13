@@ -8,23 +8,23 @@ import { apps as defaultApps } from "@/data/apps";
 const statuses: ToolStatus[] = ["Prototype", "MVP", "Stable", "À améliorer", "Client-ready", "Internal only"];
 
 const C = {
-  bg:        "#080E14",
-  surface:   "#0C1520",
-  panel:     "#0F1B27",
-  panelHov:  "#121F2D",
-  border:    "#1B2D3E",
-  borderDim: "#0F1E2C",
-  accent:    "#2A5C7A",
-  accentDim: "#153347",
-  text:      "#BEC9D2",
-  textMed:   "#6D8899",
-  textDim:   "#354C5C",
-  green:     "#3D9970",
-  greenDim:  "#1A4033",
-  amber:     "#C49A3C",
-  amberDim:  "#3D3010",
-  red:       "#C45050",
-  redDim:    "#3D1A1A",
+  bg:        "#0B0D12",
+  surface:   "#14161F",
+  panel:     "#1A1D28",
+  panelHov:  "#232631",
+  border:    "#272A37",
+  borderDim: "#1E2029",
+  accent:    "#6366F1",
+  accentDim: "#312E81",
+  text:      "#E9EAF2",
+  textMed:   "#8B90A7",
+  textDim:   "#4B5068",
+  green:     "#22C55E",
+  greenDim:  "#14532D",
+  amber:     "#F59E0B",
+  amberDim:  "#78350F",
+  red:       "#EF4444",
+  redDim:    "#7F1D1D",
 };
 
 const statusConfig: Record<ToolStatus, { label: string; color: string; bg: string; dot: string }> = {
@@ -169,13 +169,12 @@ export default function AppDashboard() {
   const iSty = { background: C.bg, border: `1px solid ${C.border}`, color: C.text } as React.CSSProperties;
 
   return (
-    <main style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif", minHeight: "100vh" }}>
+    <main style={{ background: C.bg, color: C.text, minHeight: "100vh" }}>
 
       {/* ── HEADER ── */}
       <header style={{ borderBottom: `1px solid ${C.border}`, background: C.surface }}>
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-0.5" style={{ color: C.textDim }}>BRU / 50.8503°N · 4.3517°E</p>
             <h1 className="text-lg font-black tracking-[0.12em] uppercase" style={{ color: C.text }}>SEO TOOLS HUB</h1>
             <p className="text-[8px] font-mono tracking-[0.4em] uppercase mt-0.5" style={{ color: C.textMed }}>{dateStr} · {timeStr}</p>
           </div>
@@ -183,16 +182,16 @@ export default function AppDashboard() {
             {!loading && (
               <div className="flex items-center gap-5">
                 <div className="text-right">
-                  <p className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>SYSTEMS</p>
+                  <p className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>ACTIVE</p>
                   <p className="text-2xl font-black font-mono leading-none" style={{ color: C.green }}>
-                    {onlineCount} <span className="text-[9px] tracking-wider font-mono" style={{ color: C.textMed }}>ONLINE</span>
+                    {onlineCount} <span className="text-[9px] tracking-wider font-mono" style={{ color: C.textMed }}>READY</span>
                   </p>
                 </div>
                 {warningCount > 0 && (
                   <div className="text-right">
-                    <p className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>ALERTS</p>
+                    <p className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>ATTENTION</p>
                     <p className="text-2xl font-black font-mono leading-none" style={{ color: C.amber }}>
-                      {warningCount} <span className="text-[9px] tracking-wider font-mono" style={{ color: C.textMed }}>WARN</span>
+                      {warningCount} <span className="text-[9px] tracking-wider font-mono" style={{ color: C.textMed }}>NEEDS WORK</span>
                     </p>
                   </div>
                 )}
@@ -203,7 +202,7 @@ export default function AppDashboard() {
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   className="px-4 py-1.5 text-[8px] font-mono tracking-[0.3em] uppercase transition-all"
                   style={{ background: activeTab === tab ? C.accent : "transparent", color: activeTab === tab ? "#fff" : C.textMed, border: `1px solid ${activeTab === tab ? C.accent : C.border}` }}>
-                  {tab === "dashboard" ? "OPS CENTER" : "CONFIG"}
+                  {tab === "dashboard" ? "DASHBOARD" : "SETTINGS"}
                 </button>
               ))}
             </div>
@@ -230,15 +229,12 @@ export default function AppDashboard() {
             </div>
           </div>
         </div>
-        <div style={{ borderTop: `1px solid ${C.borderDim}`, position: "relative", overflow: "hidden" }} className="px-6 py-1">
+        <div style={{ borderTop: `1px solid ${C.borderDim}` }} className="px-6 py-1">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-            <span className="text-[8px] font-mono tracking-[0.45em] uppercase" style={{ color: C.textDim }}>{tools.length} SYSTEMS REGISTERED</span>
+            <span className="text-[8px] font-mono tracking-[0.45em] uppercase" style={{ color: C.textDim }}>{tools.length} TOOLS REGISTERED</span>
             <span className="text-[8px] font-mono tracking-[0.3em] uppercase" style={{ color: C.textDim }}>
               {loading ? "LOADING…" : "READY"}&nbsp;<span style={{ color: C.green }}>&#9670;</span>
             </span>
-          </div>
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", pointerEvents: "none", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, height: "1px", width: "40%", background: `linear-gradient(90deg, transparent, ${C.accent}60, transparent)`, animation: "scanLine 7s linear infinite" }} />
           </div>
         </div>
       </header>
@@ -249,11 +245,11 @@ export default function AppDashboard() {
 
             {/* ── SIDEBAR ── */}
             <aside className="hidden lg:flex flex-col gap-0.5 w-52 flex-shrink-0">
-              <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-3" style={{ color: C.textDim }}>// SECTORS</p>
+              <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-3" style={{ color: C.textDim }}>CATEGORIES</p>
               {[
-                { label: "ALL SYSTEMS", count: tools.length, val: null as string | null },
+                { label: "ALL TOOLS", count: tools.length, val: null as string | null },
                 ...categories.map((c, i) => ({
-                  label: `SEC-${String(i + 1).padStart(2, "0")} · ${c.slice(0, 14).toUpperCase()}`,
+                  label: `${String(i + 1).padStart(2, "0")} · ${c.slice(0, 14).toUpperCase()}`,
                   count: tools.filter((t) => t.category === c).length,
                   val: c,
                 })),
@@ -280,9 +276,9 @@ export default function AppDashboard() {
             <div className="flex-1 min-w-0">
               {tools.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-32">
-                  <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-4" style={{ color: C.textDim }}>NO SYSTEMS REGISTERED</p>
+                  <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-4" style={{ color: C.textDim }}>NO TOOLS REGISTERED</p>
                   <button onClick={() => setActiveTab("settings")} className="px-6 py-2 text-[8px] font-mono tracking-[0.3em] uppercase hover:opacity-70" style={{ border: `1px solid ${C.accent}`, color: C.accent }}>
-                    → ACCESS CONFIG
+                    → OPEN SETTINGS
                   </button>
                 </div>
               )}
@@ -293,10 +289,10 @@ export default function AppDashboard() {
                   <section key={cat} className="mb-10">
                     <div className="flex items-center gap-4 mb-4">
                       <span className="text-[8px] font-mono tracking-[0.5em] uppercase flex-shrink-0" style={{ color: C.textDim }}>
-                        SECTOR {String(catIdx + 1).padStart(2, "0")} / {cat.toUpperCase()}
+                        {String(catIdx + 1).padStart(2, "0")} · {cat.toUpperCase()}
                       </span>
                       <div className="h-px flex-1" style={{ background: C.border }} />
-                      <span className="text-[8px] font-mono flex-shrink-0" style={{ color: C.textDim }}>{catTools.length} NODES</span>
+                      <span className="text-[8px] font-mono flex-shrink-0" style={{ color: C.textDim }}>{catTools.length} TOOLS</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                       {catTools.map((tool) => {
@@ -311,7 +307,7 @@ export default function AppDashboard() {
                             onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderLeftColor = C.borderDim; el.style.background = C.panel; }}>
                             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${C.borderDim}` }}>
                               <span className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>
-                                SYS-{String(gIdx + 1).padStart(2, "0")}
+                                TOOL-{String(gIdx + 1).padStart(2, "0")}
                               </span>
                               <button onClick={(e) => { e.stopPropagation(); cycleStatus(tool.name); }} title="Click to cycle status"
                                 className="flex items-center gap-1.5 text-[8px] font-mono tracking-[0.2em] uppercase px-2 py-0.5 hover:opacity-70 transition-opacity"
@@ -343,7 +339,7 @@ export default function AppDashboard() {
                               <a href={tool.url} target="_blank" rel="noopener noreferrer"
                                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[8px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
                                 style={{ background: C.accent, color: "#fff" }}>
-                                <ArrowUpRight className="w-3 h-3" /> LAUNCH
+                                <ArrowUpRight className="w-3 h-3" /> OPEN
                               </a>
                               {tool.repo && (
                                 <a href={tool.repo} target="_blank" rel="noopener noreferrer"
@@ -370,14 +366,14 @@ export default function AppDashboard() {
               {tools.some((t) => t.notes?.trim()) && (
                 <section className="mt-10" style={{ borderTop: `1px solid ${C.border}`, paddingTop: "2rem" }}>
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>// INTELLIGENCE FEED</span>
+                    <span className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>NOTES & UPDATES</span>
                     <div className="h-px flex-1" style={{ background: C.borderDim }} />
                   </div>
                   <div className="flex flex-col gap-2">
                     {tools.filter((t) => t.notes?.trim()).map((t) => (
                       <div key={t.name} className="flex gap-4 px-4 py-3" style={{ background: C.surface, border: `1px solid ${C.borderDim}` }}>
                         <span className="text-[8px] font-mono tracking-[0.2em] flex-shrink-0 mt-0.5" style={{ color: C.textDim }}>
-                          SYS-{String(tools.findIndex((x) => x.name === t.name) + 1).padStart(2, "0")}
+                          TOOL-{String(tools.findIndex((x) => x.name === t.name) + 1).padStart(2, "0")}
                         </span>
                         <p className="text-[10px] font-mono leading-relaxed" style={{ color: C.textMed }}>{t.notes}</p>
                       </div>
@@ -393,8 +389,8 @@ export default function AppDashboard() {
           <div className="max-w-lg mx-auto">
             <div style={{ border: `1px solid ${C.border}`, background: C.panel }}>
               <div className="px-6 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-                <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-1" style={{ color: C.textDim }}>// SYSTEM REGISTRATION</p>
-                <h2 className="text-sm font-black tracking-[0.1em] uppercase" style={{ color: C.text }}>Add New System</h2>
+                <p className="text-[8px] font-mono tracking-[0.5em] uppercase mb-1" style={{ color: C.textDim }}>ADD NEW TOOL</p>
+                <h2 className="text-sm font-black tracking-[0.1em] uppercase" style={{ color: C.text }}>Add New Tool</h2>
               </div>
               <form onSubmit={addTool} className="px-6 py-6 flex flex-col gap-4">
                 {([
@@ -402,7 +398,7 @@ export default function AppDashboard() {
                   { key: "description", label: "DESCRIPTION",   placeholder: "System function…" },
                   { key: "url",         label: "ENDPOINT URL",  placeholder: "https://…" },
                   { key: "repo",        label: "REPOSITORY",    placeholder: "https://github.com/…" },
-                  { key: "category",    label: "SECTOR",        placeholder: "ex. SEO Technique" },
+                  { key: "category",    label: "CATEGORY",      placeholder: "ex. SEO Technique" },
                 ] as { key: keyof ToolApp; label: string; placeholder: string; required?: boolean }[]).map((f) => (
                   <div key={f.key}>
                     <label className="block text-[8px] font-mono tracking-[0.4em] uppercase mb-1.5" style={{ color: C.textDim }}>{f.label}</label>
@@ -432,7 +428,7 @@ export default function AppDashboard() {
                 <button type="submit"
                   className="flex items-center justify-center gap-2 py-3 text-[9px] font-mono tracking-[0.3em] uppercase hover:opacity-90 transition-opacity"
                   style={{ background: C.accent, color: "#fff" }}>
-                  <Plus className="w-4 h-4" /> REGISTER SYSTEM
+                  <Plus className="w-4 h-4" /> ADD TOOL
                 </button>
               </form>
             </div>
@@ -454,7 +450,7 @@ export default function AppDashboard() {
       <footer className="mt-12" style={{ borderTop: `1px solid ${C.border}` }}>
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <span className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>SEO TOOLS HUB</span>
-          <span className="text-[8px] font-mono tracking-[0.35em] uppercase" style={{ color: C.textDim }}>BRU · {dateStr} · {timeStr}</span>
+          <span className="text-[8px] font-mono tracking-[0.35em] uppercase" style={{ color: C.textDim }}>{dateStr} · {timeStr}</span>
         </div>
       </footer>
 
@@ -469,7 +465,7 @@ export default function AppDashboard() {
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
               <div>
                 <p className="text-[8px] font-mono tracking-[0.5em] uppercase" style={{ color: C.textDim }}>ACCESS CONTROL</p>
-                <p className="text-sm font-black tracking-[0.06em] uppercase mt-0.5" style={{ color: C.text }}>OWNER AUTH</p>
+                <p className="text-sm font-black tracking-[0.06em] uppercase mt-0.5" style={{ color: C.text }}>OWNER LOGIN</p>
               </div>
               <button onClick={() => setShowLogin(false)} className="p-1 hover:opacity-70" style={{ color: C.textMed }}>
                 <X className="w-4 h-4" />
@@ -510,7 +506,7 @@ export default function AppDashboard() {
             <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
               <div className="flex items-center gap-3">
                 <span className="text-[8px] font-mono tracking-[0.4em] uppercase" style={{ color: C.textDim }}>
-                  SYS-{String(tools.findIndex((t) => t.name === detailTool.name) + 1).padStart(2, "0")}
+                  TOOL-{String(tools.findIndex((t) => t.name === detailTool.name) + 1).padStart(2, "0")}
                 </span>
                 <button onClick={() => cycleStatus(detailTool.name)}
                   className="flex items-center gap-1.5 text-[8px] font-mono tracking-[0.2em] uppercase px-2 py-0.5 hover:opacity-70 transition-opacity"
@@ -560,7 +556,7 @@ export default function AppDashboard() {
               <a href={detailTool.url} target="_blank" rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[9px] font-mono tracking-[0.2em] uppercase hover:opacity-80 transition-opacity"
                 style={{ background: C.accent, color: "#fff" }}>
-                <ArrowUpRight className="w-3.5 h-3.5" /> LAUNCH
+                <ArrowUpRight className="w-3.5 h-3.5" /> OPEN
               </a>
               {detailTool.repo && (
                 <a href={detailTool.repo} target="_blank" rel="noopener noreferrer"

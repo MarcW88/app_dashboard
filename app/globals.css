@@ -4,22 +4,44 @@
 
 :root {
   color-scheme: dark;
+
+  --bg:        #0B0D12;
+  --surface:   #14161F;
+  --panel:     #1A1D28;
+  --panel-hov: #232631;
+  --border:    #272A37;
+  --border-dim: #1E2029;
+  --accent:    #6366F1;
+  --accent-dim: #312E81;
+  --text:      #E9EAF2;
+  --text-med:  #8B90A7;
+  --text-dim:  #4B5068;
+  --green:     #22C55E;
+  --green-dim: #14532D;
+  --amber:     #F59E0B;
+  --amber-dim: #78350F;
+  --red:       #EF4444;
+  --red-dim:   #7F1D1D;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   min-height: 100vh;
   margin: 0;
-  background: #080E14;
-  color: #BEC9D2;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
 h1, h2, h3 {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
 }
 
 @keyframes fadeUp {
@@ -30,11 +52,4 @@ h1, h2, h3 {
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
-}
-
-@keyframes scanLine {
-  0%   { transform: translateX(-120%); opacity: 0; }
-  8%   { opacity: 0.7; }
-  90%  { opacity: 0.7; }
-  100% { transform: translateX(220%); opacity: 0; }
 }
